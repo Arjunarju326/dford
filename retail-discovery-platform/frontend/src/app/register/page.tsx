@@ -7,7 +7,7 @@ import axios from 'axios';
 import { useToastStore } from '@/lib/toast-store';
 import { Loader2 } from 'lucide-react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export default function RegisterPage() {
   const router = useRouter();

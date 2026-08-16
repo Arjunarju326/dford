@@ -26,8 +26,55 @@ class User(AbstractUser):
         verbose_name = _('User')
         verbose_name_plural = _('Users')
     
+    def has_shop_permission(self, perm_code, store=None, branch=None):
+        """
+        Super admin automatically has all permissions.
+        Otherwise checks if the permission is explicitly assigned to user for store/branch.
+        """
+        if self.is_superuser or self.is_staff or self.user_type == 'admin':
+            return True
+
+        q = self.user_shop_permissions.filter(permission__code=perm_code, is_granted=True)
+        if store:
+            q = q.filter(models.Q(store=store) | models.Q(store__isnull=True))
+        if branch:
+            q = q.filter(models.Q(branch=branch) | models.Q(branch__isnull=True))
+
+        return q.exists()
+
+
+class ShopPermission(models.Model):
+    """
+    Granular permission definition for Shops, Branches, Flyers, and Admin tools.
+    """
+    code = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=150)
+    category = models.CharField(max_length=50, default='stores')
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
-        return f"{self.get_full_name() or self.username}"
+        return f"{self.name} ({self.code})"
+
+
+class UserShopPermission(models.Model):
+    """
+    Mapping of specific permissions to a User for specific Stores or Branches.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_shop_permissions')
+    permission = models.ForeignKey(ShopPermission, on_delete=models.CASCADE, related_name='user_mappings')
+    store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, null=True, blank=True, related_name='user_permissions')
+    branch = models.ForeignKey('stores.StoreBranch', on_delete=models.CASCADE, null=True, blank=True, related_name='user_permissions')
+
+    is_granted = models.BooleanField(default=True)
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'permission', 'store', 'branch')
+
+    def __str__(self):
+        target = self.branch.name if self.branch else (self.store.name if self.store else "Global System")
+        return f"{self.user.username} -> {self.permission.code} [{target}]"
 
 
 class UserProfile(models.Model):

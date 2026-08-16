@@ -7,7 +7,7 @@ import axios from 'axios';
 import { useToastStore } from '@/lib/toast-store';
 import { Store, Building2, MapPin, Phone, Globe, Mail, Loader2, CheckCircle2 } from 'lucide-react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export default function ShopRegistrationPage() {
   const router = useRouter();
@@ -30,9 +30,37 @@ export default function ShopRegistrationPage() {
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingLogo(true);
+    const token = localStorage.getItem('d4d_access_token');
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'multipart/form-data',
+    };
+
+    const data = new FormData();
+    data.append('file', file);
+
+    try {
+      const res = await axios.post(`${API_BASE}/v1/upload/`, data, { headers });
+      if (res.data && res.data.url) {
+        setFormData((prev) => ({ ...prev, logo_url: res.data.url }));
+        showToast('Logo uploaded successfully!', 'success');
+      }
+    } catch (err: unknown) {
+      showToast('Logo upload failed. Verify file size/format.', 'error');
+    } finally {
+      setIsUploadingLogo(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,17 +68,16 @@ export default function ShopRegistrationPage() {
     setIsLoading(true);
 
     const token = localStorage.getItem('d4d_access_token');
-    if (!token) {
-      showToast('Please log in before registering a shop.', 'error');
-      router.push('/login');
-      return;
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
 
     try {
       await axios.post(
         `${API_BASE}/v1/shop-registration/`,
         formData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers }
       );
       setIsLoading(false);
       setIsSuccess(true);
@@ -185,15 +212,35 @@ export default function ShopRegistrationPage() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Logo Image URL</label>
-          <input
-            type="url"
-            name="logo_url"
-            value={formData.logo_url}
-            onChange={handleChange}
-            placeholder="https://images.unsplash.com/photo-..."
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-          />
+          <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Shop Logo</label>
+          <div className="flex items-center space-x-4 bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleLogoUpload}
+              className="hidden"
+              id="logo-upload-input"
+            />
+            <label
+              htmlFor="logo-upload-input"
+              className="cursor-pointer bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs px-4 py-2.5 rounded-xl border border-slate-200 transition-colors inline-block"
+            >
+              Choose Image File
+            </label>
+            {isUploadingLogo ? (
+              <div className="flex items-center space-x-1.5 text-xs text-slate-500">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-sky-600" />
+                <span>Uploading...</span>
+              </div>
+            ) : formData.logo_url ? (
+              <div className="flex items-center space-x-2">
+                <img src={formData.logo_url} alt="Logo Preview" className="w-10 h-10 rounded-lg object-cover border border-slate-200" />
+                <span className="text-[10px] text-emerald-600 font-bold">Uploaded Successfully</span>
+              </div>
+            ) : (
+              <span className="text-xs text-slate-400">No logo uploaded yet</span>
+            )}
+          </div>
         </div>
 
         <div>

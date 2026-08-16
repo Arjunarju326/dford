@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, MapPin, Menu, X, Plus, User, Globe } from 'lucide-react';
 import { useLocationStore } from '@/lib/location-store';
 import { LocationModal } from '@/components/LocationModal';
@@ -15,6 +15,26 @@ export function Header() {
   const [activeSubCat, setActiveSubCat] = useState('All Offers');
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('d4d_user');
+    if (userStr) {
+      try {
+        setCurrentUser(JSON.parse(userStr));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('d4d_access_token');
+    localStorage.removeItem('d4d_refresh_token');
+    localStorage.removeItem('d4d_user');
+    setCurrentUser(null);
+    router.push('/');
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,12 +134,40 @@ export function Header() {
               <span>QA EN ▼</span>
             </div>
 
-            <Link
-              href="/login"
-              className="text-xs font-black text-slate-900 hover:text-purple-700 tracking-wider uppercase"
-            >
-              LOGIN
-            </Link>
+            {currentUser ? (
+              <div className="flex items-center space-x-3.5">
+                {(currentUser.user_type === 'admin' || currentUser.is_staff || currentUser.is_superuser) && (
+                  <Link
+                    href="/admin"
+                    className="text-xs font-black text-amber-600 hover:text-amber-500 tracking-wider uppercase border border-amber-600/30 px-3 py-1.5 rounded-full bg-amber-50/50"
+                  >
+                    Admin
+                  </Link>
+                )}
+                {currentUser.user_type === 'shop_owner' && (
+                  <Link
+                    href="/shop/dashboard"
+                    className="text-xs font-black text-purple-700 hover:text-purple-600 tracking-wider uppercase border border-purple-700/30 px-3 py-1.5 rounded-full bg-purple-50/50"
+                  >
+                    Shop
+                  </Link>
+                )}
+                <span className="text-xs font-bold text-slate-700">Hi, {currentUser.username}</span>
+                <button
+                  onClick={handleLogout}
+                  className="text-xs font-black text-red-600 hover:text-red-500 tracking-wider uppercase"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="text-xs font-black text-slate-900 hover:text-purple-700 tracking-wider uppercase"
+              >
+                LOGIN
+              </Link>
+            )}
 
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -149,13 +197,15 @@ export function Header() {
               ))}
             </div>
 
-            <Link
-              href="/shop-register"
-              className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-4 py-2 rounded-full shadow-md transition-all shrink-0 flex items-center space-x-1 uppercase tracking-wider"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>+ Add your company</span>
-            </Link>
+            {(!currentUser || (currentUser.user_type !== 'admin' && !currentUser.is_staff && !currentUser.is_superuser)) && (
+              <Link
+                href="/shop-register"
+                className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs px-4 py-2 rounded-full shadow-md transition-all shrink-0 flex items-center space-x-1 uppercase tracking-wider"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>+ Add your company</span>
+              </Link>
+            )}
           </div>
         </div>
 

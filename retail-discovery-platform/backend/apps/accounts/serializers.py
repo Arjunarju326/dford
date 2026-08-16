@@ -80,3 +80,20 @@ class UserPreferenceSerializer(serializers.ModelSerializer):
             'notification_enabled', 'email_notifications',
             'push_notifications', 'newsletter', 'language', 'theme',
         ]
+
+
+class UserAdminSerializer(serializers.ModelSerializer):
+    full_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'email', 'first_name', 'last_name',
+            'full_name', 'user_type', 'phone_number', 'is_verified',
+            'is_active', 'is_staff', 'is_superuser', 'created_at',
+        ]
+        read_only_fields = ['id', 'created_at']
+
+    def get_full_name(self, obj):
+        return obj.get_full_name() or obj.username
+

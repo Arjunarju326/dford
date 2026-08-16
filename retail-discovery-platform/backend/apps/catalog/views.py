@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
@@ -215,3 +215,15 @@ class GlobalSearchView(APIView):
                 } for s in stores
             ]
         })
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    """GET/POST/PATCH/DELETE /api/v1/catalog/categories/ — Category CRUD for administrators."""
+    queryset = Category.objects.all().order_by('order', 'name')
+    serializer_class = CategorySerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAdminUser()]
+

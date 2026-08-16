@@ -7,6 +7,9 @@ from .views import (
     MeView,
     ChangePasswordView,
     UserPreferenceView,
+    PermissionListAPIView,
+    UserPermissionsListAPIView,
+    UserPermissionToggleAPIView,
 )
 
 urlpatterns = [
@@ -17,4 +20,9 @@ urlpatterns = [
     path('me/', MeView.as_view(), name='auth-me'),
     path('change-password/', ChangePasswordView.as_view(), name='auth-change-password'),
     path('preferences/', UserPreferenceView.as_view(), name='auth-preferences'),
+    
+    # Permission Management Endpoints
+    path('permissions/', PermissionListAPIView.as_view(), name='permission-list'),
+    path('users/permissions/', UserPermissionsListAPIView.as_view(), name='user-permission-list'),
+    path('users/<int:user_id>/permissions/', UserPermissionToggleAPIView.as_view(), name='user-permission-toggle'),
 ]

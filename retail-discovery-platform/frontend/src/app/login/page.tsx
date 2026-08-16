@@ -7,7 +7,7 @@ import axios from 'axios';
 import { useToastStore } from '@/lib/toast-store';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,10 +26,9 @@ export default function LoginPage() {
 
     const portsToTry = Array.from(
       new Set([
-        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api',
-        'http://localhost:8001/api',
-        'http://127.0.0.1:8001/api',
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
         'http://localhost:8000/api',
+        'http://127.0.0.1:8000/api',
       ])
     );
 
@@ -46,13 +45,20 @@ export default function LoginPage() {
         if (res.data && res.data.access) {
           localStorage.setItem('d4d_access_token', res.data.access);
           localStorage.setItem('d4d_refresh_token', res.data.refresh);
+          let isAdmin = false;
           if (res.data.user) {
             localStorage.setItem('d4d_user', JSON.stringify(res.data.user));
+            const u = res.data.user;
+            isAdmin = u.user_type === 'admin' || u.is_staff || u.is_superuser;
           }
 
           showToast(`Welcome back, ${username}!`, 'success');
           loginSuccess = true;
-          router.push('/');
+          if (isAdmin) {
+            router.push('/admin');
+          } else {
+            router.push('/shop');
+          }
           break;
         }
       } catch (err: unknown) {

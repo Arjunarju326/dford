@@ -2,9 +2,12 @@ from rest_framework import serializers
 from .models import Product, Category, Brand
 
 class CategorySerializer(serializers.ModelSerializer):
+    parent_name = serializers.CharField(source='parent.name', read_only=True)
+
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'icon', 'description']
+        fields = ['id', 'name', 'slug', 'icon', 'description', 'parent', 'parent_name', 'image_url', 'order', 'is_active']
+        read_only_fields = ['id', 'slug']
 
 
 class BrandSerializer(serializers.ModelSerializer):

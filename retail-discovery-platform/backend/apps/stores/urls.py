@@ -9,6 +9,7 @@ from .views import (
     AdminShopPendingListView,
     AdminShopApproveView,
     AdminShopRejectView,
+    FileUploadView,
 )
 
 router = DefaultRouter()
@@ -16,6 +17,7 @@ router.register('branches', ShopBranchViewSet, basename='shop-branch')
 
 urlpatterns = [
     path('shop-registration/', ShopRegistrationView.as_view(), name='shop-registration'),
+    path('upload/', FileUploadView.as_view(), name='file-upload'),
     path('shop/me/', ShopMeView.as_view(), name='shop-me'),
     path('admin/stats/', AdminStatsView.as_view(), name='admin-stats'),
     path('admin/shops/', AdminShopListView.as_view(), name='admin-shops-list'),

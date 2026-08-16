@@ -63,3 +63,22 @@ class NotificationTemplate(models.Model):
     
     def __str__(self):
         return self.name
+
+
+class Announcement(models.Model):
+    """
+    Broadcast announcement by admins to all users
+    """
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    created_by = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='announcements')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+

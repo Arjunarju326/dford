@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import serializers
-from .models import Notification
+from .models import Notification, Announcement
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -38,3 +38,47 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     def mark_all_read(self, request):
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return Response({'status': 'all marked as read'})
+
+
+class AnnouncementSerializer(serializers.ModelSerializer):
+    created_by_username = serializers.CharField(source='created_by.username', read_only=True)
+
+    class Meta:
+        model = Announcement
+        fields = [
+            'id', 'title', 'content', 'created_by', 'created_by_username',
+            'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_by', 'created_at', 'updated_at']
+
+
+class AnnouncementViewSet(viewsets.ModelViewSet):
+    queryset = Announcement.objects.all().order_by('-created_at')
+    serializer_class = AnnouncementSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAdminUser()]
+
+    def perform_create(self, serializer):
+        announcement = serializer.save(created_by=self.request.user)
+        from apps.accounts.models import User
+        from apps.notifications.models import Notification
+        from django.utils import timezone
+
+        users = User.objects.filter(is_active=True)
+        notifications = [
+            Notification(
+                user=user,
+                title=f"Announcement: {announcement.title}",
+                message=announcement.content,
+                notification_type='custom',
+                channel='in_app',
+                is_sent=True,
+                sent_at=timezone.now()
+            )
+            for user in users
+        ]
+        Notification.objects.bulk_create(notifications)
+

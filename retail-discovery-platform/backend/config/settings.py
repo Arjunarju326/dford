@@ -169,6 +169,10 @@ CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME', default='')
 CLOUDINARY_API_KEY = config('CLOUDINARY_API_KEY', default='')
 CLOUDINARY_API_SECRET = config('CLOUDINARY_API_SECRET', default='')
 
+# Gemini Vision AI
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='AQ.Ab8RN6LW_w5ekDIYKletjYnnvCxH70VT7QvQuIzyOnm6Rgh_cw')
+os.environ['GEMINI_API_KEY'] = GEMINI_API_KEY
+
 # Upload settings
 MAX_UPLOAD_SIZE = 5242880  # 5MB
 
@@ -200,3 +204,12 @@ LOGGING = {
         },
     },
 }
+
+# Email Settings (Gmail SMTP)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='arjun@nexcrestit.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='egaatnukzualjjti')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='arjun@nexcrestit.com')
